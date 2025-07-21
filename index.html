@@ -41,6 +41,7 @@
       margin-bottom: 30px;
       box-shadow: 0 2px 8px rgba(90,60,8,0.1);
       text-align: center;
+      width: 500px;
     }
     .input-group { margin-bottom: 14px; }
     .input-group label {
@@ -55,7 +56,16 @@
       padding: 7px 10px;
       border: 2px solid #eee08e;
       border-radius: 5px;
-      width: 150px;
+      width: 90%;
+      text-align: center;
+      margin-bottom: 7px;
+    }
+    .input-group select {
+      font-size: 1em;
+      padding: 7px 10px;
+      border: 2px solid #eee08e;
+      border-radius: 5px;
+      width: 100%;
       text-align: center;
       margin-bottom: 7px;
     }
@@ -218,8 +228,13 @@
       <label for="debtNameInput">Enter Name of the debt:</label>
       <input type="text" id="debtNameInput" value="DEBT PAYOFF GOAL">
     </div>
-    <button onclick="loadDebtByName()" style="padding: 7px 18px; font-size: 1em; background:#db3f02; color: white; border: none; border-radius: 5px; cursor: pointer;">Load Thermometer</button>
+    <div class="input-group">
+      <label for="debtSelector">Load a saved debt:</label>
+      <select id="debtSelector" onchange="onSelect()">
+      </select>
+    </div>
     <button onclick="updateThermometer()" style="padding: 7px 18px; font-size: 1em; background:#db3f02; color: white; border: none; border-radius: 5px; cursor: pointer;">Update Thermometer</button>
+    <button onclick="deleteThermometer()" style="padding: 7px 18px; font-size: 1em; background:#db3f02; color: white; border: none; border-radius: 5px; cursor: pointer;">Delete Thermometer</button>
   </div>
 
   <div class="thermometer-wrap" style="width:180px; height:220px; position: relative;">
@@ -242,6 +257,32 @@
     const currentDebtElement = document.getElementById('currentDebt');
     const interestRateElement = document.getElementById('interestRate');
     const debtNameInputElement = document.getElementById('debtNameInput');
+    const debtSelectorElement = document.getElementById('debtSelector');
+
+    let debts = [];
+
+
+    const updateSelector = (selected) => {
+      debts = Object.keys(localStorage).filter((key) => key !== 'currentDebt');
+      const newIndex = debts.indexOf(selected);
+      debtSelectorElement.length = 0;
+      for (const debt of debts) {
+        const newOption = document.createElement("option");
+        newOption.value = debt;
+        newOption.textContent = debt;
+        debtSelectorElement.appendChild(newOption);
+      }
+      if (newIndex > 0) {
+        debtSelectorElement.selectedIndex = newIndex;
+      } else {
+        debtSelectorElement.selectedIndex = 0;
+      }
+    }
+
+    const onSelect = () => {
+      const selected = debtSelectorElement.value;
+      loadSetup(selected);
+    }
 
 
     const saveSetup = () => {
@@ -267,6 +308,7 @@
       currentDebtElement.value = parsed.currentDebt;
       interestRateElement.value = parsed.interestRate;
       debtNameInputElement.value = parsed.debtName;
+      updateSelector(name);
       updateThermometer();
     }
 
@@ -278,6 +320,7 @@
       const debtNameInput = debtNameInputElement.value || 'DEBT PAYOFF GOAL';
       document.getElementById('debtName').innerHTML  = debtNameInput;
       saveSetup();
+      updateSelector(debtNameInput);
 
       
       if (totalDebt <= 0) {
@@ -334,6 +377,14 @@
       }
     }
 
+    const deleteThermometer = () => {
+      const debtName = debtSelectorElement.value
+      console.log(debtName);
+      localStorage.removeItem(debtName);
+      debts = debts.filter((name) => name !== debtName);
+      loadSetup(debts[0]);
+    }
+
     // Init
     window.onload = updateThermometer;
     // Enter in inputs
@@ -344,13 +395,8 @@
       if (e.key === 'Enter') updateThermometer();
     });
 
-
     if (localStorage.getItem('currentDebt')) {
       loadSetup(localStorage.getItem('currentDebt'));
-    }
-
-    const loadDebtByName = () => {
-      loadSetup(debtNameInputElement.value);
     }
   </script>
 </body>
